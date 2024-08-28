@@ -31,3 +31,6 @@ body {
     text-wrap: balance;
   }
 }
+.bg-image{
+  background-image: url("../app/assests/main-bg.png");
+}
