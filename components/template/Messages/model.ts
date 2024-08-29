@@ -18,8 +18,8 @@ export type Conversation = {
   isGroup: boolean;
   groupName?: string;
   groupImage?: string;
-  admin?: string; // User ObjectId
-  participants: string[]; // Array of User ObjectIds
+  admin?: User; // User 
+  participants: User[]; // Array of User 
   createdAt: string;
   updatedAt: string;
 };
@@ -27,8 +27,8 @@ export type Conversation = {
 // Message Schema
 export type Message = {
   _id: string;
-  conversationId: string; // Conversation ObjectId
-  senderId: string; // User ObjectId
+  conversationId: Conversation; // Conversation ObjectId
+  sender: User; 
   content: string;
   messageType: 'text' | 'image' | 'video';
   createdAt: string;

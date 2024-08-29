@@ -51,25 +51,48 @@ const GroupChatTemplate: React.FC<GroupChatTemplateProps> = ({ user, receiver, m
         </button>
       </div>
 
-      {/* Messages List */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex flex-col space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message._id}
-              className={`flex ${message.senderId === user._id ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`px-4 py-2 rounded-lg max-w-xs ${
-                  message.senderId === user._id ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
-              >
+     {/* Messages List */}
+<div className="flex-1 overflow-y-auto p-4">
+  <div className="flex flex-col space-y-4">
+    {messages.map((message) => (
+      <div
+        key={message._id}
+        className={`flex ${message.senderId === user._id ? 'justify-end' : 'justify-start'}`}
+      >
+        {/* Message from Other Users */}
+        {message.senderId !== user._id && (
+          <div className="flex items-start space-x-2">
+            {/* User Avatar */}
+            <img
+              src={message.senderId.image} // Assuming `sender` object is available in the message
+              alt={message.senderId.name} // Assuming `sender` object is available in the message
+              className="w-8 h-8 rounded-full"
+            />
+            <div>
+              {/* Sender's Name */}
+              <p className="text-sm text-gray-500">{message.senderId.name}</p>
+              {/* Message Content */}
+              <div className="px-4 py-2 rounded-lg max-w-xs bg-gray-200">
                 {message.content}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Message from Current User */}
+        {message.senderId === user._id && (
+          <div className="flex items-start space-x-2">
+            {/* Message Content */}
+            <div className="px-4 py-2 rounded-lg max-w-xs bg-blue-500 text-white">
+              {message.content}
+            </div>
+          </div>
+        )}
       </div>
+    ))}
+  </div>
+</div>
+
 
       {/* Message Input */}
       <form className="bg-gray-100 p-4 flex items-center" onSubmit={handleSendMessage}>
