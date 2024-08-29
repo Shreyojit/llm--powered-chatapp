@@ -1,51 +1,75 @@
-// dummyData.ts
-import { Message, User } from '@/components/organisms/models';
+import { ObjectId } from 'mongodb';
+import { Conversation, Message, User } from './model';
 
+
+// Dummy users
 export const dummyUser: User = {
-  id: 'user1',
+  _id: new ObjectId('64e44f14f3c3e82bcecfb5e0').toString(),
   name: 'John Doe',
   email: 'johndoe@email.com',
   image: 'https://randomuser.me/api/portraits/men/67.jpg',
   tokenIdentifier: 'token123',
   isOnline: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 export const dummyReceiver: User = {
-  id: 'user2',
+  _id: new ObjectId('64e44f14f3c3e82bcecfb5e1').toString(),
   name: 'Jane Doe',
   email: 'janedoe@email.com',
   image: 'https://randomuser.me/api/portraits/women/67.jpg',
   tokenIdentifier: 'token124',
   isOnline: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
+// Dummy conversation
+export const dummyConversation: Conversation = {
+  _id: new ObjectId('64e44f14f3c3e82bcecfb5e2').toString(),
+  isGroup: false,
+  participants: [dummyUser._id, dummyReceiver._id],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
+// Dummy messages
 export const dummyMessages: Message[] = [
   {
-    id: '1',
-    conversation: '1',
-    sender: 'John Doe',
+    _id: new ObjectId('64e44f14f3c3e82bcecfb5e3').toString(),
+    conversationId: dummyConversation._id,
+    senderId: dummyUser._id,
     content: 'Hello everyone!',
     messageType: 'text',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: '2',
-    conversation: '1',
-    sender: 'Jane Doe',
+    _id: new ObjectId('64e44f14f3c3e82bcecfb5e4').toString(),
+    conversationId: dummyConversation._id,
+    senderId: dummyReceiver._id,
     content: 'Hey there!',
     messageType: 'text',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: '3',
-    conversation: '1',
-    sender: 'John Doe',
+    _id: new ObjectId('64e44f14f3c3e82bcecfb5e5').toString(),
+    conversationId: dummyConversation._id,
+    senderId: dummyUser._id,
     content: 'How\'s it going!?',
     messageType: 'text',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
-    id: '4',
-    conversation: '1',
-    sender: 'Jane Doe',
+    _id: new ObjectId('64e44f14f3c3e82bcecfb5e6').toString(),
+    conversationId: dummyConversation._id,
+    senderId: dummyReceiver._id,
     content: 'Fine, thanks!',
     messageType: 'text',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];

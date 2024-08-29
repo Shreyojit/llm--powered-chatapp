@@ -1,18 +1,20 @@
-"use client"
+'use client'
 
-import React from 'react';
-import { Message, User } from '../Messages/model';
-import { MdAttachFile, MdEmojiEmotions, MdOutlineLocalPhone, MdOutlinePhone, MdSend } from "react-icons/md";
+import React, { useState } from 'react';
+import { FlashIcon, SendMsIcon } from '@/lib/utils/icons'; // Adjust the import path as necessary
+import { Conversation, Message, User } from '../Messages/model';
+import { MdAttachFile, MdEmojiEmotions, MdSend } from 'react-icons/md';
+import { FlashlightIcon } from 'lucide-react';
 
-
-interface ChatTemplateProps {
+interface GroupChatTemplateProps {
   user: User;
-  receiver: User;
+  receiver: User; // This might be group info in case of group chat
   messages: Message[];
+  conversation: Conversation; // Add this prop
 }
 
-const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages }) => {
-  const [inputValue, setInputValue] = React.useState<string>('');
+const GroupChatTemplate: React.FC<GroupChatTemplateProps> = ({ user, receiver, messages, conversation }) => {
+  const [inputValue, setInputValue] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -30,17 +32,22 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages })
       {/* Topbar */}
       <div className="bg-gray-100 border-b border-gray-300 flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden">
-            <img src={receiver.image} alt={receiver.name} className="w-full h-full object-cover" />
-          </div>
+          {conversation.isGroup ? (
+            <div className="w-12 h-12 rounded-full overflow-hidden">
+              <img src={conversation.groupImage} alt={conversation.groupName} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 rounded-full overflow-hidden">
+              <img src={receiver.image} alt={receiver.name} className="w-full h-full object-cover" />
+            </div>
+          )}
           <div className="flex flex-col">
-            <h3 className="font-semibold text-lg">{receiver.name}</h3>
+            <h3 className="font-semibold text-lg">{conversation.isGroup ? conversation.groupName : receiver.name}</h3>
             <p className="text-gray-500">{receiver.isOnline ? 'Online' : 'Offline'}</p>
           </div>
         </div>
         <button className="p-2 rounded-full hover:bg-gray-200">
-          {/* Replace with your actual icon */}
-          <span>Icon</span>
+          <FlashlightIcon />
         </button>
       </div>
 
@@ -86,9 +93,8 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages })
     <MdSend />
   </button>
 </form>
-
     </div>
   );
 };
 
-export default ChatTemplate;
+export default GroupChatTemplate;
