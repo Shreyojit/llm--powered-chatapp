@@ -1,6 +1,12 @@
+
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -26,11 +32,8 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.btn {
+  text-transform: none;
 }
-.bg-image{
-  background-image: url("../app/assests/main-bg.png");
-}
+
+

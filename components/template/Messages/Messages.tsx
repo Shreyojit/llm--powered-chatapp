@@ -1,9 +1,17 @@
-import React from 'react'
+import React from 'react';
+import ChatTemplate from '../ChatTemplate/ChatTemplate';
+import { dummyMessages, dummyReceiver, dummyUser } from './dummyData';
 
 const Messages = () => {
   return (
-    <div>Messages</div>
-  )
+    <div className="w-screen h-screen flex">
+      <ChatTemplate 
+        user={dummyUser} 
+        receiver={dummyReceiver} 
+        messages={dummyMessages} 
+      />
+    </div>
+  );
 }
 
-export default Messages
+export default Messages;
