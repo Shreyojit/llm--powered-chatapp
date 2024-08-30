@@ -58,38 +58,31 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const senderId = searchParams.get('senderId');
     const receiverId = searchParams.get('receiverId');
-    const lastMessageDate = searchParams.get('lastMessageDate'); // For pagination
-    const limit = parseInt(searchParams.get('limit') || '20'); // Default to 20 if not provided
+    const limit = parseInt(searchParams.get('limit') || '10'); // Default to last 5 messages if not provided
 
-    // Validate required parameters
     if (!senderId || !receiverId) {
       return NextResponse.json({ message: 'Sender ID and Receiver ID are required.' }, { status: 400 });
     }
 
-    // Calculate the start date for the last 2 days
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 20);
+    // Calculate the start date for the last 20 days
+    const twentyDaysAgo = new Date();
+    twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
 
-    // Create the query object
-    const query: any = {
-      sendAt: { $gte: twoDaysAgo },
+    // Create the query object with the sentAt filter
+    const query = {
+      sentAt: { $gte: twentyDaysAgo }, // Filter by the last 20 days
       $or: [
         { sender: senderId, receiver: receiverId },
         { sender: receiverId, receiver: senderId },
       ],
     };
 
-    // Add the pagination condition if lastMessageDate is provided
-    if (lastMessageDate) {
-      query.sendAt = { ...query.sendAt, $lt: new Date(lastMessageDate) };
-    }
-
     console.log('Query:', JSON.stringify(query, null, 2)); // Improved logging for debugging
 
     // Fetch the messages from the database
     const messages = await SingleMessageModel.find(query)
-      .sort({ sendAt: -1 }) // Sort by date descending
-      .limit(limit); // Apply the limit
+      .sort({ sentAt: -1 }) // Sort by date descending
+      .limit(limit); // Apply the limit for the last messages
 
     console.log('Messages:', messages); // Log fetched messages
 
