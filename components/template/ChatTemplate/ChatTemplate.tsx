@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MdAttachFile, MdEmojiEmotions, MdSend } from "react-icons/md";
+import { MdAttachFile, MdEmojiEmotions, MdSend, MdPhone, MdVideocam } from "react-icons/md"; // Import phone and video call icons
 import { SingleMessage } from '@/lib/models/SingleMessageSchema';
 import { User } from '../Messages/model';
+import Link from 'next/link'
 
 interface ChatTemplateProps {
   user: User;
@@ -51,6 +52,7 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages, o
       }
   
       setInputValue(''); // Clear the input field
+      onSendMessage(newMessage); // Notify parent component about the new message
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -77,9 +79,30 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages, o
             <p className="text-gray-500">{receiver.isOnline ? 'Online' : 'Offline'}</p>
           </div>
         </div>
-        <button className="p-2 rounded-full hover:bg-gray-200">
-          <span>Icon</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Phone Call Button */}
+          <Link href={`/video-call?userID=${user._id}&receiverID=${receiver._id}`} legacyBehavior>
+            <a className="p-2 rounded-full hover:bg-gray-200">
+              <MdPhone className="text-gray-500 w-6 h-6" />
+            </a>
+          </Link>
+          {/* Video Call Button */}
+          <Link
+  href={{
+    pathname: '/video-call',
+    query: {
+      userID: user._id,
+      receiverID: receiver._id,
+      user: encodeURIComponent(JSON.stringify(user)), // Serialize and encode the user object
+    },
+  }}
+  legacyBehavior
+>
+  <a className="p-2 rounded-full hover:bg-gray-200">
+    <MdVideocam className="text-gray-500 w-6 h-6" />
+  </a>
+</Link>
+        </div>
       </div>
 
       {/* Messages List */}
@@ -131,16 +154,3 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages, o
 };
 
 export default ChatTemplate;
-
-
-
-
-
-
-
-
-
-
-
-
-
