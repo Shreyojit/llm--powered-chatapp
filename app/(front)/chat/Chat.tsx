@@ -1,5 +1,6 @@
 import Messages from '@/components/template/Messages/Messages';
-import Sidebar from '@/components/template/Sidebar/Sidebar';
+import Sidebar from '@/components2/template/Sidebar';
+
 import React from 'react';
 
 const Chat = () => {

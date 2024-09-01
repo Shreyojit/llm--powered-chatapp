@@ -1,121 +1,132 @@
-'use client'
+import React, { useState, useRef, useEffect } from 'react';
+import { MdAttachFile, MdEmojiEmotions, MdSend } from "react-icons/md";
+import { GroupMessage } from '@/lib/models/GroupMessageSchema';
+import { User } from '../Messages/model';
 
-import React, { useState } from 'react';
-import { FlashIcon, SendMsIcon } from '@/lib/utils/icons'; // Adjust the import path as necessary
-import { Conversation, Message, User } from '../Messages/model';
-import { MdAttachFile, MdEmojiEmotions, MdSend } from 'react-icons/md';
-import { FlashlightIcon } from 'lucide-react';
-
-interface GroupChatTemplateProps {
+export interface GroupChatTemplateProps {
   user: User;
-  receiver: User; // This might be group info in case of group chat
-  messages: Message[];
-  conversation: Conversation; // Add this prop
+  groupId: string;
+  messages: GroupMessage[];
+  onSendMessage: (message: GroupMessage) => void;
+  groupMembers: User[];
 }
 
-const GroupChatTemplate: React.FC<GroupChatTemplateProps> = ({ user, receiver, messages, conversation }) => {
+const GroupChatTemplate: React.FC<GroupChatTemplateProps> = ({ user, groupId, messages, onSendMessage, groupMembers }) => {
   const [inputValue, setInputValue] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your send message logic here
-    console.log('Send message:', inputValue);
-    setInputValue('');
+
+    if (!inputValue.trim()) return;
+
+    const newMessage: GroupMessage = {
+      groupId,
+      senderId: user._id,
+      message: inputValue,
+      sentAt: new Date(), // Ensure this is a Date object
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/api/messages/group', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          groupId,
+          senderId: user._id,
+          message: inputValue,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setInputValue('');
+      onSendMessage(newMessage); // Update messages in parent
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
+
+  const getSenderName = (senderId: string) => {
+    const user = groupMembers.find(member => member._id === senderId);
+    return user ? user.name : 'Unknown';
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   return (
     <div className="bg-white flex flex-col h-full w-full shadow-lg">
       {/* Topbar */}
       <div className="bg-gray-100 border-b border-gray-300 flex items-center justify-between p-4">
+        <h3 className="font-semibold text-lg">Group Chat</h3>
         <div className="flex items-center gap-3">
-          {conversation.isGroup ? (
-            <div className="w-12 h-12 rounded-full overflow-hidden">
-              <img src={conversation.groupImage} alt={conversation.groupName} className="w-full h-full object-cover" />
+          {groupMembers.map(member => (
+            <div key={member._id} className="w-12 h-12 rounded-full overflow-hidden">
+              <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
             </div>
-          ) : (
-            <div className="w-12 h-12 rounded-full overflow-hidden">
-              <img src={receiver.image} alt={receiver.name} className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div className="flex flex-col">
-            <h3 className="font-semibold text-lg">{conversation.isGroup ? conversation.groupName : receiver.name}</h3>
-            <p className="text-gray-500">{receiver.isOnline ? 'Online' : 'Offline'}</p>
-          </div>
+          ))}
         </div>
-        <button className="p-2 rounded-full hover:bg-gray-200">
-          <FlashlightIcon />
-        </button>
       </div>
 
-     {/* Messages List */}
-<div className="flex-1 overflow-y-auto p-4">
-  <div className="flex flex-col space-y-4">
-    {messages.map((message) => (
-      <div
-        key={message._id}
-        className={`flex ${message.senderId === user._id ? 'justify-end' : 'justify-start'}`}
-      >
-        {/* Message from Other Users */}
-        {message.senderId !== user._id && (
-          <div className="flex items-start space-x-2">
-            {/* User Avatar */}
-            <img
-              src={message.senderId.image} // Assuming `sender` object is available in the message
-              alt={message.senderId.name} // Assuming `sender` object is available in the message
-              className="w-8 h-8 rounded-full"
-            />
-            <div>
-              {/* Sender's Name */}
-              <p className="text-sm text-gray-500">{message.senderId.name}</p>
-              {/* Message Content */}
-              <div className="px-4 py-2 rounded-lg max-w-xs bg-gray-200">
-                {message.content}
+      {/* Messages List */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex flex-col space-y-4">
+          {messages.map((message, index) => {
+            const sentAtDate = new Date(message.sentAt); // Convert to Date object
+            return (
+              <div
+                key={index}
+                className={`flex ${message.senderId === user._id ? 'justify-end' : 'justify-start'} items-start space-x-2`}
+              >
+                <div
+                  className={`px-4 py-2 rounded-lg max-w-xs ${
+                    message.senderId === user._id ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                  }`}
+                >
+                  <div className="font-semibold text-sm">
+                    {getSenderName(message.senderId)}
+                  </div>
+                  <div className="mt-1">
+                    {message.message}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {sentAtDate.toLocaleString()} {/* Use a more readable format */}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Message from Current User */}
-        {message.senderId === user._id && (
-          <div className="flex items-start space-x-2">
-            {/* Message Content */}
-            <div className="px-4 py-2 rounded-lg max-w-xs bg-blue-500 text-white">
-              {message.content}
-            </div>
-          </div>
-        )}
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-    ))}
-  </div>
-</div>
-
 
       {/* Message Input */}
       <form className="bg-gray-100 p-4 flex items-center" onSubmit={handleSendMessage}>
-  {/* Emoji Icon */}
-  <MdEmojiEmotions className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
-
-  {/* Attachment Icon */}
-  <MdAttachFile className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
-
-  {/* Input Field */}
-  <input
-    type="text"
-    value={inputValue}
-    onChange={handleInputChange}
-    placeholder="Type your message..."
-    className="flex-1 mr-2 pl-4 rounded-full border border-gray-300 bg-gray-100 placeholder:text-gray-500"
-  />
-
-  {/* Send Button */}
-  <button type="submit" className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-    <MdSend />
-  </button>
-</form>
+        <MdEmojiEmotions className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
+        <MdAttachFile className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder="Type your message..."
+          className="flex-1 mr-2 pl-4 rounded-full border border-gray-300 bg-gray-100 placeholder:text-gray-500"
+        />
+        <button type="submit" className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
+          <MdSend />
+        </button>
+      </form>
     </div>
   );
 };

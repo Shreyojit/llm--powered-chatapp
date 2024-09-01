@@ -1,6 +1,10 @@
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import SingleMessageModel from '@/lib/models/SingleMessageSchema';
+import pusher from '@/lib/pusher';
+
 
 export async function POST(request: NextRequest) {
   await dbConnect();
@@ -13,10 +17,16 @@ export async function POST(request: NextRequest) {
       receiver: receiverId,
       message,
       type,
-      sendAt: new Date(),
+      sentAt: new Date(),
     });
+    console.log("New Mesage",newMessage)
 
     await newMessage.save();
+
+    // Trigger an event
+const result = await pusher.trigger(`user-${receiverId}`, 'singleMessage', newMessage);
+console.log('Event Triggered:', result);
+
     return NextResponse.json(newMessage, { status: 201 });
   } catch (error) {
     console.error('Error creating message:', error);
@@ -24,33 +34,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// export async function GET(request: NextRequest) {
-//   await dbConnect();
-
-//   try {
-//     const { searchParams } = new URL(request.url);
-//     const senderId = searchParams.get('senderId');
-//     const receiverId = searchParams.get('receiverId');
-
-//     if (!senderId || !receiverId) {
-//       return NextResponse.json({ message: 'Sender ID and Receiver ID are required.' }, { status: 400 });
-//     }
-
-//     const messages = await SingleMessageModel.find({
-//       $or: [
-//         { sender: senderId, receiver: receiverId },
-//         { sender: receiverId, receiver: senderId },
-//       ],
-//     }).sort('sendAt');
-
-//     return NextResponse.json(messages, { status: 200 });
-//   } catch (error) {
-//     console.error('Error fetching messages:', error);
-//     return NextResponse.json({ message: 'Internal Server Error', error }, { status: 500 });
-//   }
-// }
 
 
+
+
+// GET request to fetch messages
 export async function GET(request: NextRequest) {
   await dbConnect();
 
@@ -58,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const senderId = searchParams.get('senderId');
     const receiverId = searchParams.get('receiverId');
-    const limit = parseInt(searchParams.get('limit') || '10'); // Default to last 5 messages if not provided
+    const limit = parseInt(searchParams.get('limit') || '100'); // Default to last 10 messages if not provided
 
     if (!senderId || !receiverId) {
       return NextResponse.json({ message: 'Sender ID and Receiver ID are required.' }, { status: 400 });
@@ -68,7 +56,7 @@ export async function GET(request: NextRequest) {
     const twentyDaysAgo = new Date();
     twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
 
-    // Create the query object with the sentAt filter
+    // Query for messages
     const query = {
       sentAt: { $gte: twentyDaysAgo }, // Filter by the last 20 days
       $or: [
@@ -77,16 +65,14 @@ export async function GET(request: NextRequest) {
       ],
     };
 
-    console.log('Query:', JSON.stringify(query, null, 2)); // Improved logging for debugging
+    console.log('Query:', JSON.stringify(query, null, 2));
 
-    // Fetch the messages from the database
     const messages = await SingleMessageModel.find(query)
-      .sort({ sentAt: -1 }) // Sort by date descending
-      .limit(limit); // Apply the limit for the last messages
+      .sort({ sentAt: -1 })
+      .limit(limit);
 
-    console.log('Messages:', messages); // Log fetched messages
+    console.log('Messages:', messages);
 
-    // Return the fetched messages
     return NextResponse.json(messages, { status: 200 });
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -94,11 +80,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
-
-
-
-
+// DELETE request to remove a message
 export async function DELETE(request: NextRequest) {
   await dbConnect();
 
@@ -128,6 +110,7 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
+// PUT request to update a message
 export async function PUT(request: NextRequest) {
   await dbConnect();
 

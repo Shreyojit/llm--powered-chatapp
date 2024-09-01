@@ -1,29 +1,68 @@
-"use client"
-
-import React from 'react';
-import { Message, User } from '../Messages/model';
-import { MdAttachFile, MdEmojiEmotions, MdOutlineLocalPhone, MdOutlinePhone, MdSend } from "react-icons/md";
-
+import React, { useEffect, useRef, useState } from 'react';
+import { MdAttachFile, MdEmojiEmotions, MdSend } from "react-icons/md";
+import { SingleMessage } from '@/lib/models/SingleMessageSchema';
+import { User } from '../Messages/model';
 
 interface ChatTemplateProps {
   user: User;
   receiver: User;
-  messages: Message[];
+  messages: SingleMessage[];
+  onSendMessage: (message: SingleMessage) => void; // Callback to handle new messages
 }
 
-const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages }) => {
-  const [inputValue, setInputValue] = React.useState<string>('');
+const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages, onSendMessage }) => {
+  const [inputValue, setInputValue] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref to track the end of the messages list
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your send message logic here
-    console.log('Send message:', inputValue);
-    setInputValue('');
+  
+    if (!inputValue.trim()) return;
+  
+    const newMessage: SingleMessage = {
+      sender: user._id,
+      receiver: receiver._id,
+      message: inputValue,
+      sentAt: new Date(),
+      receivedAt: undefined,
+      readAt: undefined,
+    };
+  
+    try {
+      const response = await fetch('http://localhost:3000/api/messages/single', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          senderId: user._id,
+          receiverId: receiver._id,
+          message: inputValue,
+          type: 'text',
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+  
+      setInputValue(''); // Clear the input field
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
+  
+
+  useEffect(() => {
+    // Scroll to the bottom of the messages list whenever a new message is added
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]); // The effect will run whenever the messages array changes
 
   return (
     <div className="bg-white flex flex-col h-full w-full shadow-lg">
@@ -39,7 +78,6 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages })
           </div>
         </div>
         <button className="p-2 rounded-full hover:bg-gray-200">
-          {/* Replace with your actual icon */}
           <span>Icon</span>
         </button>
       </div>
@@ -47,48 +85,62 @@ const ChatTemplate: React.FC<ChatTemplateProps> = ({ user, receiver, messages })
       {/* Messages List */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex flex-col space-y-4">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div
-              key={message._id}
-              className={`flex ${message.senderId === user._id ? 'justify-end' : 'justify-start'}`}
+              key={index} // Use index if no unique ID available
+              className={`flex ${message.sender === user._id ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`px-4 py-2 rounded-lg max-w-xs ${
-                  message.senderId === user._id ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                  message.sender === user._id ? 'bg-blue-500 text-white' : 'bg-gray-200'
                 }`}
               >
-                {message.content}
+                {message.message}
               </div>
             </div>
           ))}
+          {/* Ref to the last message */}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
       {/* Message Input */}
       <form className="bg-gray-100 p-4 flex items-center" onSubmit={handleSendMessage}>
-  {/* Emoji Icon */}
-  <MdEmojiEmotions className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
+        {/* Emoji Icon */}
+        <MdEmojiEmotions className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
 
-  {/* Attachment Icon */}
-  <MdAttachFile className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
+        {/* Attachment Icon */}
+        <MdAttachFile className="text-gray-500 w-6 h-6 mr-2 cursor-pointer" />
 
-  {/* Input Field */}
-  <input
-    type="text"
-    value={inputValue}
-    onChange={handleInputChange}
-    placeholder="Type your message..."
-    className="flex-1 mr-2 pl-4 rounded-full border border-gray-300 bg-gray-100 placeholder:text-gray-500"
-  />
+        {/* Input Field */}
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder="Type your message..."
+          className="flex-1 mr-2 pl-4 rounded-full border border-gray-300 bg-gray-100 placeholder:text-gray-500"
+        />
 
-  {/* Send Button */}
-  <button type="submit" className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
-    <MdSend />
-  </button>
-</form>
-
+        {/* Send Button */}
+        <button type="submit" className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600">
+          <MdSend />
+        </button>
+      </form>
     </div>
   );
 };
 
 export default ChatTemplate;
+
+
+
+
+
+
+
+
+
+
+
+
+

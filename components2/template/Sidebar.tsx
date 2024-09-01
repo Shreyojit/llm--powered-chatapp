@@ -1,8 +1,9 @@
 import React from 'react';
 import SearchBar from '@/components/organisms/SearchBar';
 import { userProps } from '@/types';
-import { dummyUser } from '../../../components2/template/dummyUser';
-import ChatList from '@/components/organisms/ChatList';
+import { dummyUser } from './dummyUser';
+import ChatList from '../organisms/ChatList';
+
 
 
 interface SearchBarProps {
